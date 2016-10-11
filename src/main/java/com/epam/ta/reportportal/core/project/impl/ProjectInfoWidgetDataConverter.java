@@ -39,8 +39,6 @@ import javax.annotation.Resource;
 
 import com.epam.ta.reportportal.database.entity.project.info.InfoInterval;
 import com.epam.ta.reportportal.database.entity.project.info.ProjectInfoGroup;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
 import org.springframework.stereotype.Service;
 
 import com.epam.ta.reportportal.database.entity.Launch;
@@ -177,10 +175,9 @@ public class ProjectInfoWidgetDataConverter {
 			values.put(COUNT, String.valueOf(count));
 			values.put(INTERVAL, interval.getInterval());
 			if (criteria != BY_DAY) {
-				DateTime parse = DateTime.parse(entry.getKey());
-				// TODO remove Yoda time. replace with JDK8
-				values.put(START_PERIOD, parse.withDayOfWeek(DateTimeConstants.MONDAY).toString("yyy-MM-dd"));
-				values.put(END_PERIOD, parse.withDayOfWeek(DateTimeConstants.SUNDAY).toString("yyy-MM-dd"));
+				LocalDate parse = LocalDate.parse(entry.getKey());
+				values.put(START_PERIOD, parse.format(DateTimeFormatter.ISO_DATE));
+				values.put(END_PERIOD, parse.format(DateTimeFormatter.ISO_DATE));
 			} else {
 				values.put(START_PERIOD, entry.getKey());
 			}

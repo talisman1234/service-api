@@ -21,55 +21,8 @@
 
 package com.epam.ta.reportportal.core.project.impl;
 
-import static com.epam.ta.reportportal.events.handler.UserActivityHandler.CREATE_USER;
-import static com.epam.ta.reportportal.events.handler.LaunchActivityHandler.START;
-import static com.epam.ta.reportportal.events.handler.LaunchActivityHandler.FINISH;
-import static com.epam.ta.reportportal.events.handler.LaunchActivityHandler.DELETE;
-import static com.epam.ta.reportportal.events.handler.WidgetActivityEventHandler.SHARE;
-import static com.epam.ta.reportportal.events.handler.WidgetActivityEventHandler.UNSHARE;
-import static com.epam.ta.reportportal.events.handler.TicketActivitySubscriber.POST_ISSUE;
-import static com.epam.ta.reportportal.events.handler.ExternalSystemActivityHandler.UPDATE;
-import static com.epam.ta.reportportal.events.handler.ProjectActivityHandler.UPDATE_PROJECT;
-import static com.epam.ta.reportportal.commons.Predicates.notNull;
-import static com.epam.ta.reportportal.commons.validation.BusinessRule.expect;
-import static com.epam.ta.reportportal.database.search.Condition.EQUALS;
-import static com.epam.ta.reportportal.database.search.Condition.GREATER_THAN_OR_EQUALS;
-import static com.epam.ta.reportportal.database.search.Condition.IN;
-import static com.epam.ta.reportportal.ws.model.ErrorType.BAD_REQUEST_ERROR;
-import static com.epam.ta.reportportal.ws.model.ErrorType.PROJECT_NOT_FOUND;
-import static com.epam.ta.reportportal.ws.model.launch.Mode.DEFAULT;
-import static java.util.stream.Collectors.toList;
-import static org.springframework.data.domain.Sort.Direction.DESC;
-
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-
-import com.epam.ta.reportportal.commons.validation.BusinessRule;
-import com.epam.ta.reportportal.events.handler.ExternalSystemActivityHandler;
-import com.epam.ta.reportportal.ws.model.ErrorType;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Direction;
-import org.springframework.stereotype.Service;
-
 import com.epam.ta.reportportal.core.project.IGetProjectInfoHandler;
-import com.epam.ta.reportportal.database.dao.ActivityRepository;
-import com.epam.ta.reportportal.database.dao.LaunchRepository;
-import com.epam.ta.reportportal.database.dao.ProjectRepository;
-import com.epam.ta.reportportal.database.dao.TestItemRepository;
-import com.epam.ta.reportportal.database.dao.UserRepository;
+import com.epam.ta.reportportal.database.dao.*;
 import com.epam.ta.reportportal.database.entity.Launch;
 import com.epam.ta.reportportal.database.entity.Project;
 import com.epam.ta.reportportal.database.entity.item.Activity;
@@ -80,11 +33,39 @@ import com.epam.ta.reportportal.database.entity.statistics.IssueCounter;
 import com.epam.ta.reportportal.database.entity.user.User;
 import com.epam.ta.reportportal.database.search.Filter;
 import com.epam.ta.reportportal.database.search.FilterCondition;
+import com.epam.ta.reportportal.events.handler.ExternalSystemActivityHandler;
 import com.epam.ta.reportportal.ws.converter.ProjectInfoResourceAssembler;
 import com.epam.ta.reportportal.ws.model.project.LaunchesPerUser;
 import com.epam.ta.reportportal.ws.model.project.ProjectInfoResource;
 import com.epam.ta.reportportal.ws.model.widget.ChartObject;
 import com.google.common.collect.Lists;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.stereotype.Service;
+
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.*;
+import java.util.Map.Entry;
+
+import static com.epam.ta.reportportal.commons.Predicates.notNull;
+import static com.epam.ta.reportportal.commons.validation.BusinessRule.expect;
+import static com.epam.ta.reportportal.database.search.Condition.*;
+import static com.epam.ta.reportportal.events.handler.ExternalSystemActivityHandler.UPDATE;
+import static com.epam.ta.reportportal.events.handler.LaunchActivityHandler.*;
+import static com.epam.ta.reportportal.events.handler.ProjectActivityHandler.UPDATE_PROJECT;
+import static com.epam.ta.reportportal.events.handler.TicketActivitySubscriber.POST_ISSUE;
+import static com.epam.ta.reportportal.events.handler.UserActivityHandler.CREATE_USER;
+import static com.epam.ta.reportportal.events.handler.WidgetActivityEventHandler.SHARE;
+import static com.epam.ta.reportportal.events.handler.WidgetActivityEventHandler.UNSHARE;
+import static com.epam.ta.reportportal.ws.model.ErrorType.BAD_REQUEST_ERROR;
+import static com.epam.ta.reportportal.ws.model.ErrorType.PROJECT_NOT_FOUND;
+import static com.epam.ta.reportportal.ws.model.launch.Mode.DEFAULT;
+import static java.util.stream.Collectors.toList;
+import static org.springframework.data.domain.Sort.Direction.DESC;
 
 /**
  * Get project information for administrator page
@@ -322,8 +303,6 @@ public class GetProjectStatisticHandler implements IGetProjectInfoHandler {
 	 * @return
 	 */
 	private static Date getStartIntervalDate(InfoInterval input) {
-		DateTime now = new DateTime().toDateTime(DateTimeZone.UTC);
-		DateTime range = now.minusMonths(input.getCount());
-		return range.toDate();
+		return Date.from(ZonedDateTime.now(ZoneId.of("UTC")).minusMonths(input.getCount()).toInstant());
 	}
 }

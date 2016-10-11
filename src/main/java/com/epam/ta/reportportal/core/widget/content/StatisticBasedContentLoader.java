@@ -21,6 +21,10 @@
 
 package com.epam.ta.reportportal.core.widget.content;
 
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,8 +36,6 @@ import java.util.Optional;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import org.joda.time.DateTime;
 
 import com.epam.ta.reportportal.ws.model.widget.ChartObject;
 
@@ -62,7 +64,7 @@ public class StatisticBasedContentLoader {
 	private static final String AUTOMATION_BUG = "statistics.issueCounter.automationBug.total";
 	private static final String SYSTEM_ISSUE = "statistics.issueCounter.systemIssue.total";
 	private static final String NO_DEFECT = "statistics.issueCounter.noDefect.total";
-	private static final String DATE_PATTERN = "yyyy-MM-dd";
+	private static final DateTimeFormatter DATE_PATTERN = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 	/**
 	 * Return collection name using input class object
@@ -133,7 +135,7 @@ public class StatisticBasedContentLoader {
 
 		/* Fill ranged items with calculated */
 		for (ChartObject anInput : input) {
-			String group = new DateTime(Long.valueOf(anInput.getStartTime())).toString(DATE_PATTERN);
+			String group = DATE_PATTERN.format(Instant.ofEpochMilli(Long.valueOf(anInput.getStartTime())));
 			ChartObject axisObject = range.get(group);
 			Map<String, String> values = axisObject.getValues();
 			Map<String, String> updated = new HashMap<>();
@@ -158,8 +160,8 @@ public class StatisticBasedContentLoader {
 	 * @return
 	 */
 	public Map<String, List<ChartObject>> maxByDate(List<ChartObject> input, Period period, String maxSeries) {
-		final Function<ChartObject, String> chartObjectToDate = chartObject -> new DateTime(Long.valueOf(chartObject.getStartTime()))
-				.toString(DATE_PATTERN);
+		final Function<ChartObject, String> chartObjectToDate = chartObject -> DATE_PATTERN.format(Instant
+				.ofEpochMilli(Long.valueOf(chartObject.getStartTime())));
 		final BinaryOperator<ChartObject> chartObjectReducer = (o1,
 				o2) -> Integer.valueOf(o1.getValues().get(maxSeries)) > Integer.valueOf(o2.getValues().get(maxSeries)) ? o1 : o2;
 		final Map<String, Optional<ChartObject>> groupByDate = input.stream()
@@ -188,27 +190,27 @@ public class StatisticBasedContentLoader {
 	 */
 	private Map<String, ChartObject> buildRange(List<ChartObject> base, Period period) {
 		final LongSummaryStatistics statistics = base.stream().mapToLong(object -> Long.valueOf(object.getStartTime())).summaryStatistics();
-		final DateTime start = new DateTime(statistics.getMin());
-		final DateTime end = new DateTime(statistics.getMax());
-		DateTime intermediate = start;
+		final Instant start = Instant.ofEpochMilli(statistics.getMin());
+		final Instant end = Instant.ofEpochMilli(statistics.getMax());
+		Instant intermediate = start;
 		final LinkedHashMap<String, ChartObject> map = new LinkedHashMap<>();
 		if (base.isEmpty())
 			return map;
 		while (intermediate.isBefore(end)) {
-			map.put(intermediate.toString(DATE_PATTERN), createChartObject(base.get(0)));
+			map.put(DATE_PATTERN.format(intermediate), createChartObject(base.get(0)));
 			switch (period) {
 			case DAY:
-				intermediate = intermediate.plusDays(1);
+				intermediate = intermediate.plus(1, ChronoUnit.DAYS);
 				break;
 			case WEEK:
-				intermediate = intermediate.plusDays(1);
+				intermediate = intermediate.plus(1, ChronoUnit.WEEKS);
 				break;
 			case MONTH:
-				intermediate = intermediate.plusMonths(1);
+				intermediate = intermediate.plus(1, ChronoUnit.MONTHS);
 				break;
 			}
 		}
-		map.put(end.toString(DATE_PATTERN), createChartObject(base.get(0)));
+		map.put(DATE_PATTERN.format(end), createChartObject(base.get(0)));
 		return map;
 	}
 
