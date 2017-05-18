@@ -6,7 +6,7 @@ LABEL description="@description@"
 
 ENV APP_FILE @name@-@version@
 ENV APP_DOWNLOAD_URL https://dl.bintray.com/epam/reportportal/com/epam/reportportal/@name@/@version@/$APP_FILE.jar
-ENV JAVA_OPTS="-Xmx1g"
+ENV JAVA_OPTS="-Xmx1g -XX:MinHeapFreeRatio=40 -XX:MaxHeapFreeRatio=60"
 
 RUN apk --no-cache add ttf-droid openssl
 
